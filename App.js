@@ -1,112 +1,102 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, { Component } from 'react';
+import { View, Text, FlatList, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import Axios from 'axios';
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+export default class App extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            data: {},
+            isLoading: true,
+            isError: false
+        };
+    }
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+    // Mount User Method
+    componentDidMount() {
+        this.getGithubUser()
+    }
 
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+    //   Get Api Users
+    getGithubUser = async () => {
+        try {
+            const response = await Axios.get(`https://api.github.com/users?since=135`)
+            this.setState({ isError: false, isLoading: false, data: response.data })
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+        } catch (error) {
+            this.setState({ isLoading: false, isError: true })
+        }
+    }
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
 
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+
+    render() {
+        //  If load data
+        if (this.state.isLoading) {
+            return (
+                <View
+                    style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}
+                >
+                    <ActivityIndicator size='large' color='red' />
+                </View>
+            )
+        }
+        // If data not fetch
+        else if (this.state.isError) {
+            return (
+                <View
+                    style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}
+                >
+                    <Text>Terjadi Error Saat Memuat Data</Text>
+                </View>
+            )
+        }
+        // If data finish load
+        return (
+            <FlatList
+                data={this.state.data}
+                renderItem={({ item }) =>
+                    <View style={styles.viewList}>
+                        <View>
+                            <Image source={{ uri: `${item.avatar_url}` }} style={styles.Image} />
+                        </View>
+                        <View>
+                            <Text style={styles.textItemLogin}> {item.login}</Text>
+                            <Text style={styles.textItemUrl}> {item.html_url}</Text>
+
+                        </View>
+                    </View>
+                }
+                keyExtractor={({ id }, index) => index}
+            />
+        );
+    }
+}
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
+    viewList: {
+        height: 100,
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#DDD',
+        alignItems: 'center'
+    },
+    Image: {
+        width: 88,
+        height: 80,
+        borderRadius: 40
+    },
+    textItemLogin: {
+        fontWeight: 'bold',
+        textTransform: 'capitalize',
+        marginLeft: 20,
+        fontSize: 16
+    },
+    textItemUrl: {
+        fontWeight: 'bold',
+        marginLeft: 20,
+        fontSize: 12,
+        marginTop: 10,
+        color: 'blue'
+    }
+})
